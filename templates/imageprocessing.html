@@ -1,0 +1,34 @@
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+
+제목: {{ctx.title}} 
+
+<br>
+<br>
+
+<form  action="/upload" method="post" enctype="multipart/form-data">
+    <input type="file" name="file1" accept="images/*" capture="camera">
+    <input type="submit" value="전송">
+</form>        
+
+<button id=img_emboss> 엠보싱</button> <br><br>
+
+<button id=img_sharp> 샤프닝</button> <br>
+
+<img src="/static/result.jpg" id=result>
+
+<script>
+    $("#img_emboss").click(function(){
+            $.get("/imageprocess?method=emboss",
+                  function(data,status) {
+                        $("#result").attr("src", "/static/result.jpg?"+ new Date());
+                
+                  });
+    });
+    
+    $("#img_sharp").click(function(){
+            alert('hi~~~~~');
+    });
+</script>
