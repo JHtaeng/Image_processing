@@ -13,22 +13,28 @@
     <input type="submit" value="전송">
 </form>        
 
-<button id=img_emboss> 엠보싱</button> <br><br>
+<button type = button value="emboss"> 엠보싱</button> 
 
-<button id=img_sharp> 샤프닝</button> <br>
+<button type= button value = "sharp"> 샤프닝</button> 
+커널 크기 <input type=text id=size size=3><button type=button value="blur"> 블러 </button> <br>
 
-<img src="/static/result.jpg" id=result>
+
+<img id=result width=400>
 
 <script>
-    $("#img_emboss").click(function(){
-            $.get("/imageprocess?method=emboss",
+    $("#result").attr("src", "/static/result.jpg?"+ new Date());
+    $("button").click(function(){
+            url = "/imageprocess?method=" + $(this).val();
+            
+            if ($(this).val()=="blur")
+                url += "&size=" + $("#size").val();
+            console.log(url);
+            $.get(url,
                   function(data,status) {
                         $("#result").attr("src", "/static/result.jpg?"+ new Date());
                 
-                  });
+            });
+    
     });
     
-    $("#img_sharp").click(function(){
-            alert('hi~~~~~');
-    });
 </script>
