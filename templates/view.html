@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="refresh" content="5; url=/view">
+<head>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.bundle.min.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js"></script>
+</head>
+
+<body>
+
+<h1> {{ctx.title}} </h1>
+    
+<canvas id="myChart1" style="height:300; width:500"></canvas>
+
+    
+
+</body>
+<script>
+
+
+function addGraph(id, labels, data) {
+
+var ctx = document.getElementById(id);
+var myChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: labels,
+        datasets: [{
+            label: '그래프 테스트',
+            data: data,
+            borderWidth: 1
+        }]
+    },
+    options: {
+      responsive : true,
+    }
+
+});
+
+}
+
+addGraph("myChart1",{{ctx.labels|safe}},{{ctx.data}});
+//addGraph("myChart2",["가","나","다"],[85,5,62.4]);
+
+
+</script>
+
+
+
