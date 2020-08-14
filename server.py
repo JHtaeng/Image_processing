@@ -30,13 +30,8 @@ def detectHuman(frame):
     return detected
 
 @app.route('/')
-def index():
-    
-    html = """
-        보행자 검출 Test
-        <img src=/video_feed width=320 height=240>
-    """
-    return html
+def index(): 
+    return  render_template("human.html")
     
 
 def gen():
@@ -49,7 +44,10 @@ def gen():
             vc = cv2.VideoCapture('./vision/vtest.avi')
             break
         
-        detectHuman(frame)
+        rect = detectHuman(frame)
+        
+        datas.append(len(rect))
+        print(datas)
         
         encode_return_code, image_buffer = cv2.imencode('.jpg', frame)
         io_buf = io.BytesIO(image_buffer)
