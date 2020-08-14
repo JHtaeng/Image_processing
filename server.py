@@ -1,88 +1,74 @@
 
 import cv2
 import numpy as np
-import datetime
-from flask import Flask, request, render_template, redirect
+import random
+import io
 
-image = None 
+from flask import Flask, request, render_template, redirect, make_response, Response
+import requests
+
 
 app = Flask(__name__)
 
-def chromakey(img, background):
-    hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-    patch = hsv[0:20, 0:20, :] 
+vc = cv2.VideoCapture('./vision/vtest.avi')
 
-    minH = np.min(patch[:,:,0])*0.9
-    maxH = np.max(patch[:,:,0])*1.1
+hog = cv2.HOGDescriptor()
+hog.setSVMDetector(cv2.HOGDescriptor_getDefaultPeopleDetector())
 
-    minS = np.min(patch[:,:,1])*0.9
-    maxS = np.max(patch[:,:,1])*1.1
+datas = []
 
-    h = hsv[:,:,0]
-    s = hsv[:,:,1]
+def detectHuman(frame):
 
-    dest = img.copy()
+    detected, _ = hog.detectMultiScale(frame)
 
-    for r in range(img.shape[0]):
-        for c in range(img.shape[1]):
-            if h[r,c] >= minH and h[r,c] <= maxH and s[r,c] >= minS and s[r,c] <= maxS:
-                dest[r,c,:] = background[r,c,:]
-            else:
-                dest[r,c,:] = img[r,c,:]
-                
-    return dest
+    for (x,y,w,h) in detected:
+        c = (random.randint(0,255),
+             random.randint(0,255),
+             random.randint(0,255))
+        cv2.rectangle(frame, (x,y), (x+w, y+h),c,3)
+        
+    return detected
 
 @app.route('/')
 def index():
-   
-    return render_template("imageprocessing.html", ctx={"title":"영상처리"})
-
-@app.route('/upload', methods=["POST"])
-def upload():
-    global image
-    f = request.files['file1']
-    filename = "./static/" + f.filename
-    f.save(filename)
     
-    image = cv2.imread(filename)
-    cv2.imwrite('./static/result.jpg', image)
-    print(image.shape)
+    html = """
+        보행자 검출 Test
+        <img src=/video_feed width=320 height=240>
+    """
+    return html
     
-    return redirect("/")
 
-@app.route('/imageprocess')
-def imageprocess():
-    global image
-    method = request.args.get("method")
-    if method == "emboss":
-        print(image.shape)
-        print("emboss")
+def gen():
+    global vc
+    global datas
+    while True:
+        read_return_code, frame = vc.read()
         
-        emboss = np.array([[-1,-1,0],
-                           [-1,0,1],
-                           [0,1,1]], np.float32)
+        if not read_return_code :
+            vc = cv2.VideoCapture('./vision/vtest.avi')
+            break
+        
+        detectHuman(frame)
+        
+        encode_return_code, image_buffer = cv2.imencode('.jpg', frame)
+        io_buf = io.BytesIO(image_buffer)
+        yield (b'--frame\r\n'
+               b'Content-Type: image/jpeg\r\n\r\n' + io_buf.read() + b'\r\n')
 
-        dst = cv2.filter2D(image, -1,emboss, delta=128)
-        cv2.imwrite("./static/result.jpg", np.vstack((image,dst)))
-        
-        
-    if method == "sharp":
-        print(image.shape)
-        
-        sharp = np.array([[0,-1,0],
-                           [-1,5,-1],
-                           [0,-1,0]], np.float32)
 
-        dst = cv2.filter2D(image, -1, sharp)
-        cv2.imwrite("./static/result.jpg", np.vstack((image,dst)))
-        
-        
-    if method == "blur":
-        size = int(request.args.get("size",3))
-        dst = cv2.blur(image,(size,size))
-        cv2.imwrite("./static/result.jpg", np.vstack((image,dst)))
+@app.route('/video_feed')
+def video_feed():
+    """Video streaming route. Put this in the src attribute of an img tag."""
+    return Response(
+        gen(),
+        mimetype='multipart/x-mixed-replace; boundary=frame'
+    )
+
+@app.route('/view')
+def view():
+    global datas
+    return str(datas)
     
-    return "hello!~@~!@~!@~!@~!@~!@~"
-
 if __name__ == '__main__':
     app.run(host='0.0.0.0', debug=True, port=8000)
