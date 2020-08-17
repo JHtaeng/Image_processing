@@ -1,72 +1,34 @@
 
-import cv2
+import flask
+from flask import Flask,render_template,url_for,request
+import base64
 import numpy as np
-import random
-import io
+import cv2
+from keras.models import load_model
 
-from flask import Flask, request, render_template, redirect, make_response, Response
-import requests
-
-
+init_Base64 = 21   # data:image/png;base64, 로 시작하
 app = Flask(__name__)
-
-vc = cv2.VideoCapture('./vision/vtest.avi')
-
-hog = cv2.HOGDescriptor()
-hog.setSVMDetector(cv2.HOGDescriptor_getDefaultPeopleDetector())
-
-datas = []
-
-def detectHuman(frame):
-
-    detected, _ = hog.detectMultiScale(frame)
-
-    for (x,y,w,h) in detected:
-        c = (random.randint(0,255),
-             random.randint(0,255),
-             random.randint(0,255))
-        cv2.rectangle(frame, (x,y), (x+w, y+h),c,3)
-        
-    return detected
+model = load_model('mnist_cnn.h5')
 
 @app.route('/')
-def index(): 
-    return  render_template("human.html")
+def home():
+    return render_template("mnist.html")
+
+
+@app.route('/upload', methods=['POST'])
+def upload():
     
+    draw = request.form['url']        # hidden 변수로 전달함            
+    draw = draw[init_Base64:]
+    draw_decoded = base64.b64decode(draw)
+    image = np.asarray(bytearray(draw_decoded), dtype="uint8")
+    image = cv2.imdecode(image, cv2.IMREAD_GRAYSCALE)
+    image = cv2.resize(image, dsize=(28,28), interpolation=cv2.INTER_AREA)
 
-def gen():
-    global vc
-    global datas
-    while True:
-        read_return_code, frame = vc.read()
-        
-        if not read_return_code :
-            vc = cv2.VideoCapture('./vision/vtest.avi')
-            break
-        
-        rect = detectHuman(frame)
-        
-        datas.append(len(rect))
-        print(datas)
-        
-        encode_return_code, image_buffer = cv2.imencode('.jpg', frame)
-        io_buf = io.BytesIO(image_buffer)
-        yield (b'--frame\r\n'
-               b'Content-Type: image/jpeg\r\n\r\n' + io_buf.read() + b'\r\n')
+    image = image.reshape(1,28,28,1)
+    p = model.predict(image)
+#     cv2.imwrite('test.png', image)
+    return f"result: {np.argmax(p)}"
 
-
-@app.route('/video_feed')
-def video_feed():
-    """Video streaming route. Put this in the src attribute of an img tag."""
-    return Response(
-        gen(),
-        mimetype='multipart/x-mixed-replace; boundary=frame'
-    )
-
-@app.route('/view')
-def view():
-    global datas
-    return str(datas)
-    
 if __name__ == '__main__':
     app.run(host='0.0.0.0', debug=True, port=8000)
