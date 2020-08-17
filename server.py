@@ -24,10 +24,10 @@ def upload():
     image = np.asarray(bytearray(draw_decoded), dtype="uint8")
     image = cv2.imdecode(image, cv2.IMREAD_GRAYSCALE)
     image = cv2.resize(image, dsize=(28,28), interpolation=cv2.INTER_AREA)
-
+    cv2.imwrite('test.png', image)
     image = image.reshape(1,28,28,1)
     p = model.predict(image)
-#     cv2.imwrite('test.png', image)
+
     return f"result: {np.argmax(p)}"
 
 if __name__ == '__main__':
