@@ -109,6 +109,11 @@ function save() {
 
 <body>
     <form id = "myForm" action="/upload" method="POST" enctype="multipart/form-data">
+        <select name=mode>
+            <option value ="digit">숫자인식</option>
+            <option value ="korean">한글</option>
+        </select>
+        
         <canvas id="canvas", name ="draw" width="250" height="250">
         <script type="text/javascript">
             $(document).ready(function() {
