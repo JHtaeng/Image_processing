@@ -7,10 +7,13 @@ import cv2
 from keras.models import load_model 
 import io 
 import json
+import pickle
 from keras.applications.resnet50 import ResNet50
 from keras.applications.resnet50 import preprocess_input
 
-
+with open("hdict.bin","rb") as fr:
+    hdict = pickle.load(fr)
+    
 init_Base64 = 22   # data:image/png;base64, 로 시작하
 app = Flask(__name__)
 
@@ -34,9 +37,8 @@ def upload():
     
     image=preprocess_input(image)
     pred = model.predict(image)
-    
-    json_data = json.load(open('imagenet_class_index.json'))
-    r = json_data[f"{np.argmax(pred)}"][1]
+
+    r = hdict[np.argmax(pred)]
 
     return f"인식 결과: {r}"
     

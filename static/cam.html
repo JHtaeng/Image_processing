@@ -40,7 +40,7 @@ function take_snapshot() {
     Webcam.snap( function(data_uri) {
         console.log(data_uri);
         document.getElementById('results').innerHTML = 
-        '<img id="imageprev" src="'+data_uri+'"/>';
+        '<img id="imageprev"  src="'+data_uri+'"/>';
     } );    
 }
  
@@ -48,7 +48,7 @@ function take_snapshot() {
  function save_photo() {
         Webcam.snap( function(data_uri) {
             document.getElementById('results').innerHTML = 
-                '<img id="imageprev" src="'+data_uri+'"/>';            
+                '<img id="imageprev" width=120 src="'+data_uri+'"/>';            
             $.post('/image', {
                 photo_cap: data_uri,
             },function(data){                
